@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"runtime"
 )
 
 func Copy(src string, dst string) {
@@ -38,6 +39,40 @@ func File(filename string) []byte {
 		return []byte{}
 	}
 	return raw
+}
+
+func GetLivePeer(build bool) {
+
+
+	if build{
+
+		if _, err := os.Stat(filepath.Join(dir, "livepeer")); os.IsExist(err) {
+			return
+		}
+
+		if runtime.GOOS == "linux" {
+			download("https://github.com/livepeer/go-livepeer/releases/download/0.1.3/livepeer_linux", "livepeer")
+		} else {
+			download("https://github.com/livepeer/go-livepeer/releases/download/0.1.3/livepeer_darwin", "livepeer")
+		}
+		err := os.Chmod("livepeer", 0777)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}else{
+
+		if _, err := os.Stat(filepath.Join(dir, "go-livepeer")); os.IsExist(err) {
+			return
+		}
+
+		cmd := exec.Command("git", "clone", "https://github.com/livepeer/go-livepeer.git")
+		cmd.Start()
+		if err := cmd.Wait(); err != nil {
+			glog.Infof("Couldn't clone: %v", err)
+			os.Exit(1)
+		}
+	}
+
 }
 
 func (w *wizard) stats() {
@@ -152,7 +187,7 @@ func (w *wizard) deployProtocol() {
 
 	//Clone the protocol repo
 	if _, err := os.Stat(filepath.Join(dir, "protocol")); os.IsNotExist(err) {
-		cmd := exec.Command("git", "clone", "git@github.com:livepeer/protocol.git")
+		cmd := exec.Command("git", "clone","-b","develop", "https://github.com/livepeer/protocol.git")
 		cmd.Start()
 		if err := cmd.Wait(); err != nil {
 			glog.Infof("Couldn't clone: %v", err)
@@ -160,12 +195,6 @@ func (w *wizard) deployProtocol() {
 		}
 		fmt.Println("Done cloning protocol")
 
-		cmd = exec.Command("git", "checkout", "develop")
-		cmd.Start()
-		if err := cmd.Wait(); err != nil {
-			glog.Infof("Couldn't checkout develop: %v", err)
-			os.Exit(1)
-		}
 
 		//Copy truffle.js
 		Copy(filepath.Join(dir, "truffle.js"), filepath.Join(dir, "protocol", "truffle.js"))
@@ -204,15 +233,8 @@ func (w *wizard) deployProtocol() {
 }
 
 func (w *wizard) setupAndStartBroadcaster() {
-	if _, err := os.Stat(filepath.Join(dir, "livepeer")); os.IsNotExist(err) {
-		//Download Livepeer
-		download("https://github.com/livepeer/go-livepeer/releases/download/0.1.3/livepeer_darwin", "livepeer")
-		err := os.Chmod("livepeer", 0777)
-		if err != nil {
-			fmt.Println(err)
-		}
-		//TODO: Change to tar deployment and untar the executables.
-	}
+	isBuild := false
+	GetLivePeer(isBuild)
 
 	if _, err := os.Stat(filepath.Join(dir, "lpdata1/keys.json")); os.IsNotExist(err) {
 		os.Mkdir("lpdata1", 0777)
@@ -223,7 +245,7 @@ func (w *wizard) setupAndStartBroadcaster() {
 		if _, err := http.Get(fmt.Sprintf("http://localhost:%v", broadcasterPort)); err != nil {
 			if i == 0 {
 				fmt.Println("Start broadcaster before we can set it up")
-				w.broadcasterCmd()
+				w.broadcasterCmd(isBuild)
 			}
 			time.Sleep(time.Millisecond * 500)
 			continue
@@ -248,16 +270,8 @@ func (w *wizard) setupAndStartBroadcaster() {
 }
 
 func (w *wizard) setupAndStartTranscoder() {
-	if _, err := os.Stat(filepath.Join(dir, "livepeer")); os.IsNotExist(err) {
-		//Download Livepeer
-		download("https://github.com/livepeer/go-livepeer/releases/download/0.1.3/livepeer_darwin", "livepeer")
-		err := os.Chmod("livepeer", 0777)
-		if err != nil {
-			fmt.Println(err)
-		}
-		//TODO: Change to tar deployment and untar the executables.
-	}
-
+	isBuild := true
+	GetLivePeer(isBuild)
 	if _, err := os.Stat(filepath.Join(dir, "lpdata2/keys.json")); os.IsNotExist(err) {
 		os.Mkdir("lpdata2", 0777)
 		Copy(filepath.Join(dir, "lpkeys2.json"), filepath.Join(dir, "lpdata2", "keys.json"))
@@ -267,7 +281,7 @@ func (w *wizard) setupAndStartTranscoder() {
 		if _, err := http.Get(fmt.Sprintf("http://localhost:%v", transcoderPort)); err != nil {
 			if i == 0 {
 				fmt.Println("Start transcoder before we can set it up")
-				w.transcoderCmd()
+				w.transcoderCmd(isBuild)
 			}
 			time.Sleep(time.Millisecond * 500)
 			continue
@@ -295,16 +309,28 @@ func (w *wizard) setupAndStartTranscoder() {
 	}
 }
 
-func (w *wizard) broadcasterCmd() {
-	cmd := fmt.Sprintf("./livepeer -bootnode -controllerAddr %v -datadir %v -ethDatadir %v -ethAccountAddr 0x94107cb2261e722f9f4908115546eeee17decada -monitor=false -rtmp %v -http %v &> lpBroadcaster.log",
-		w.ControllerAddr, filepath.Join(dir, "lpdata1"), filepath.Join(dir, "lpGeth"), broadcasterPort-7000, broadcasterPort)
-	fmt.Printf("\n\nCommand: %v\n\n", cmd)
+func (w *wizard) broadcasterCmd(isBuild bool) {
+	if isBuild {
+		cmd := fmt.Sprintf("./livepeer -bootnode -controllerAddr %v -datadir %v -ethDatadir %v -ethAccountAddr 0x94107cb2261e722f9f4908115546eeee17decada -monitor=false -rtmp %v -http %v &> lpBroadcaster.log",
+			w.ControllerAddr, filepath.Join(dir, "lpdata1"), filepath.Join(dir, "lpGeth"), broadcasterPort-7000, broadcasterPort)
+		fmt.Printf("\n\nCommand: %v\n\n", cmd)
+	}else{
+		cmd:= fmt.Sprintf("cd go-livepeer ; go run cmd/livepeer/livepeer.go -bootnode -controllerAddr %v -datadir %v -ethDatadir %v -ethAccountAddr 0x94107cb2261e722f9f4908115546eeee17decada -monitor=false -rtmp %v -http %v &> lpBroadcaster.log",
+			w.ControllerAddr, filepath.Join(dir, "lpdata1"), filepath.Join(dir, "lpGeth"), broadcasterPort-7000, broadcasterPort)
+			fmt.Printf("\n\nCommand: %v\n\n",cmd)
+	}
 }
 
-func (w *wizard) transcoderCmd() {
-	cmd := fmt.Sprintf("./livepeer -controllerAddr %v -datadir %v -ethDatadir %v -ethAccountAddr 0x0ddb225031ccb58ff42866f82d907f7766899014 -monitor=false -rtmp %v -http %v -bootID 1220fd39d26e8a0ddf25693e574b821df32c45cd18fee1ee8bf329da96eb67bd2b5f -bootAddr /ip4/127.0.0.1/tcp/15000 -p 15001 -transcoder &> lpBroadcaster.log",
-		w.ControllerAddr, filepath.Join(dir, "lpdata2"), filepath.Join(dir, "lpGeth"), transcoderPort-7000, transcoderPort)
-	fmt.Printf("\n\nCommand: %v\n\n", cmd)
+func (w *wizard) transcoderCmd(isBuild bool) {
+	if isBuild {
+		cmd := fmt.Sprintf("./livepeer -controllerAddr %v -datadir %v -ethDatadir %v -ethAccountAddr 0x0ddb225031ccb58ff42866f82d907f7766899014 -monitor=false -rtmp %v -http %v -bootID 1220fd39d26e8a0ddf25693e574b821df32c45cd18fee1ee8bf329da96eb67bd2b5f -bootAddr /ip4/127.0.0.1/tcp/15000 -p 15001 -transcoder &> lpBroadcaster.log",
+			w.ControllerAddr, filepath.Join(dir, "lpdata2"), filepath.Join(dir, "lpGeth"), transcoderPort-7000, transcoderPort)
+		fmt.Printf("\n\nCommand: %v\n\n", cmd)
+	}else{
+		cmd:= fmt.Sprintf("cd go-livepeer ; go run cmd/livepeer/livepeer.go -controllerAddr %v -datadir %v -ethDatadir %v -ethAccountAddr 0x0ddb225031ccb58ff42866f82d907f7766899014 -monitor=false -rtmp %v -http %v -bootID 1220fd39d26e8a0ddf25693e574b821df32c45cd18fee1ee8bf329da96eb67bd2b5f -bootAddr /ip4/127.0.0.1/tcp/15000 -p 15001 -transcoder &> lpBroadcaster.log",
+			w.ControllerAddr, filepath.Join(dir, "lpdata2"), filepath.Join(dir, "lpGeth"), transcoderPort-7000, transcoderPort)
+		fmt.Printf("\n\nCommand: %v\n\n",cmd)
+	}
 }
 
 func download(rawURL, fileName string) {
