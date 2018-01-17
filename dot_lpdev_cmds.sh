@@ -441,6 +441,8 @@ function __lpdev_node_reset {
 
 function __lpdev_node_update {
 
+  wget_args=$1
+
   URL=$(curl -s https://api.github.com/repos/livepeer/go-livepeer/releases |jq -r ".[0].assets[].browser_download_url" | grep linux)
 
   if [ -z $URL ]
@@ -450,7 +452,7 @@ function __lpdev_node_update {
   fi
 
   cd $HOME
-  wget $URL
+  wget $wget_args $URL
   tar -xf livepeer_linux.tar
   rm livepeer_linux.tar
   echo "Don't forget to restart any running nodes to use the latest release"
