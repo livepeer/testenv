@@ -61,6 +61,16 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "file", source: "dot_lpdev_cmds.sh", destination: "$HOME/.lpdev_cmds.sh"
   config.vm.provision "shell", inline: "if ! grep -q lpdev_cmds.sh /home/vagrant/.bashrc; then echo 'source $HOME/.lpdev_cmds.sh' >> /home/vagrant/.bashrc; fi"
+  config.vm.provision "shell", privileged: false, inline: <<~SCREENRC
+    cat <<-SHELL_SCREENRC > $HOME/.screenrc
+    	# An alternative hardstatus to display a bar at the bottom listing the
+    	# windownames and highlighting the current windowname in blue. (This is only
+    	# enabled if there is no hardstatus setting for your terminal)
+    	hardstatus on
+    	hardstatus alwayslastline
+    	hardstatus string "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %m/%d %C%a "
+    SHELL_SCREENRC
+  SCREENRC
 
   config.vm.provider "virtualbox" do |vb|
     # Customize the number of CPUs and amount of memory on the VM:
