@@ -497,7 +497,7 @@ function __lpdev_node_broadcaster {
   echo "Running $transferEth"
   eval $transferEth
 
-  nodeDataDir=$nodeBaseDataDir/${broadcasterGeth:0:10}
+  nodeDataDir=$nodeBaseDataDir/broadcaster-${broadcasterGeth:0:10}
   if [ ! -d $nodeDataDir ]
   then
     mkdir -p $nodeDataDir
@@ -604,7 +604,7 @@ function __lpdev_node_transcoder {
   echo "Running $transferEth"
   eval $transferEth
 
-  nodeDataDir=$nodeBaseDataDir/${transcoderGeth:0:10}
+  nodeDataDir=$nodeBaseDataDir/transcoder-${transcoderGeth:0:10}
   if [ ! -d $nodeDataDir ]
   then
     mkdir -p $nodeDataDir
