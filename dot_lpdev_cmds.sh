@@ -288,7 +288,7 @@ function __lpdev_protocol_init {
     echo "Cloning github.com/livepeer/protocol into src directory"
     OPWD=$PWD
     cd $srcDir
-    git clone -b develop "https://github.com/livepeer/protocol.git"
+    git clone -b master "https://github.com/livepeer/protocol.git"
     cd $OPWD
   fi
 
