@@ -638,7 +638,7 @@ function __lpdev_node_transcoder {
               -rtmp $transcoderRtmpPort \\
               -http $transcoderApiPort \\
               -bootID $bootNodeId \\
-              -bootAddr \"/ip4/localhost/tcp/15000\" \\
+              -bootAddr \"/ip4/127.0.0.1/tcp/15000\" \\
               -p 15001 \\
               -transcoder"
 
