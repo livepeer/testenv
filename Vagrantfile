@@ -6,18 +6,19 @@ Vagrant.require_version ">= 2.0.0"
 require 'etc'
 
 # Specify a custom local directory for project source repos.
+DEFAULT_DATADIR = File.join("..", "lpdev-data")
 project_src_dirs = ENV["LPSRC"] || File.join(ENV["HOME"],"src")
 
 if !File.directory?(project_src_dirs)
   if ["reload","up"].include?(ARGV[0])
     puts "INFO: The default directory for project source files (~/src) or the
   directory you provided in the environment variable $LPSRC does not exist.
-  Setting this to '..', please create ~/src or provide a directory that contains
+  Setting this to '#{DEFAULT_DATADIR}', please create ~/src or provide a directory that contains
   your project's source repos. This will be mounted in the virtual machine as
   /src."
   end
 
-  project_src_dirs = ".."
+  project_src_dirs = DEFAULT_DATADIR
 end
 
 # NOTE: In some use cases it might be desirable to have the VM act as an
@@ -56,7 +57,7 @@ Vagrant.configure("2") do |config|
     config.vm.network "public_network"
   end
 
-  config.vm.synced_folder project_src_dirs, "/home/vagrant/src"
+  config.vm.synced_folder project_src_dirs, "/home/vagrant/src", create: true
 
   config.vm.provision "shell", inline: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
   config.vm.provision "shell", inline: "sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\""
