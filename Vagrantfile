@@ -61,12 +61,11 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
   config.vm.provision "shell", inline: "sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\""
   config.vm.provision "shell", inline: "sudo apt-get update"
-  config.vm.provision "shell", inline: "sudo apt-get install -y bindfs"
-  config.vm.provision "shell", inline: "sudo apt-get install -y jq"
-  config.vm.provision "shell", inline: "sudo apt-get install unzip"
-  config.vm.provision "shell", inline: "sudo apt-get install -y docker-ce"
+  config.vm.provision "shell", inline: "sudo apt-get install -y bindfs jq unzip docker-ce autotools-dev autoconf"
 
   config.vm.provision "file", source: "dot_lpdev_cmds.sh", destination: "$HOME/.lpdev_cmds.sh"
+  config.vm.provision "file", source: "build_src_deps.sh", destination: "$HOME/.build_src_deps.sh"
+  config.vm.provision "file", source: "install_src_deps.sh", destination: "$HOME/.install_src_deps.sh"
   config.vm.provision "shell", inline: "if ! grep -q lpdev_cmds.sh /home/vagrant/.bashrc; then echo 'source $HOME/.lpdev_cmds.sh' >> /home/vagrant/.bashrc; fi"
   config.vm.provision "shell", privileged: false, inline: "source $HOME/.lpdev_cmds.sh && __lpdev_node_update --no-verbose"
   config.vm.provision "shell", privileged: false, inline: <<~SCREENRC

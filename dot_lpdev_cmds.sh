@@ -852,3 +852,5 @@ function __lpdev_wizard {
 }
 
 alias lpdev=__lpdev_wizard
+alias build_src_deps=./.build_src_deps.sh
+alias install_src_deps=./.install_src_deps.sh
