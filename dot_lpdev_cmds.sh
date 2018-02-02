@@ -807,6 +807,8 @@ function __lpdev_wizard {
   #"Deposit tokens to node"
   "Start & set up verifier"
   "Update livepeer and cli"
+  "Install FFmpeg"
+  "Rebuild FFmpeg"
   "Destroy current environment"
   "Exit"
   )
@@ -842,6 +844,12 @@ function __lpdev_wizard {
       "Update livepeer and cli")
         __lpdev_node_update
         ;;
+      "Install FFmpeg")
+        ~/.install_src_deps.sh
+        ;;
+      "Rebuild FFmpeg")
+        ~/.build_src_deps.sh
+        ;;
       "Destroy current environment")
         __lpdev_reset
         ;;
@@ -852,5 +860,3 @@ function __lpdev_wizard {
 }
 
 alias lpdev=__lpdev_wizard
-alias build_src_deps=./.build_src_deps.sh
-alias install_src_deps=./.install_src_deps.sh
