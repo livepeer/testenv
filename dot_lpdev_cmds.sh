@@ -523,7 +523,7 @@ function __lpdev_node_broadcaster {
   if ! $broadcasterRunning && [ -n $broadcasterGeth ]
   then
     echo "Running LivePeer broadcast node with the following command:
-      $binDir -bootnode \\
+      $binDir -bootIDs "" -bootAddrs "" \\
               -controllerAddr $controllerAddress \\
               -datadir $nodeDataDir \\
               -ethAcctAddr $broadcasterGeth \\
@@ -534,7 +534,7 @@ function __lpdev_node_broadcaster {
               -rtmp $broadcasterRtmpPort \\
               -http $broadcasterApiPort"
 
-    nohup $binDir -bootnode -controllerAddr $controllerAddress -datadir $nodeDataDir \
+    nohup $binDir -bootIDs "" -bootAddrs "" -controllerAddr $controllerAddress -datadir $nodeDataDir \
       -ethAcctAddr $broadcasterGeth -ethIpcPath $gethIPC -ethKeystorePath $ethKeystorePath -ethPassword "pass" \
       -monitor=false -rtmp $broadcasterRtmpPort \
       -http $broadcasterApiPort &>> $nodeDataDir/broadcaster.log &
