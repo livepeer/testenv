@@ -61,9 +61,11 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder File.join(project_src_dirs,"go"), "/home/vagrant/go", create: true
 
   config.vm.provision "shell", inline: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
+  config.vm.provision "shell", inline: "curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -"
   config.vm.provision "shell", inline: "sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\""
+  config.vm.provision "shell", inline: "echo 'deb https://dl.yarnpkg.com/debian/ stable main' | sudo tee /etc/apt/sources.list.d/yarn.list"
   config.vm.provision "shell", inline: "sudo apt-get update"
-  config.vm.provision "shell", inline: "sudo apt-get install -y bindfs jq unzip docker-ce autotools-dev autoconf"
+  config.vm.provision "shell", inline: "sudo apt-get install -y bindfs jq unzip docker-ce autotools-dev autoconf yarn"
 
   config.vm.provision "file", source: "dot_lpdev_cmds.sh", destination: "$HOME/.lpdev_cmds.sh"
   config.vm.provision "file", source: "build_src_deps.sh", destination: "$HOME/.build_src_deps.sh"
