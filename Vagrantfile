@@ -33,6 +33,8 @@ default_nodes = ENV["NODES"] || 5
 rtmp_port = 1935
 api_port = 8935
 ipfs_port = 4001
+js_port = 3000
+rpc_port = 8545
 
 # Get current user pid and gid
 uid = Etc.getpwnam(ENV["USER"]).uid
@@ -53,6 +55,8 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.network "forwarded_port", guest: ipfs_port, host: ipfs_port
+    config.vm.network "forwarded_port", guest: js_port, host: js_port
+    config.vm.network "forwarded_port", guest: rpc_port, host: rpc_port
   else
     config.vm.network "public_network"
   end
