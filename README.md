@@ -94,6 +94,96 @@ What would you like to do?
 _The Current Status values above are specific to your environment. Yours
 will be different._
 
+To initialize a Livepeer test environment, run commands 2 through 8.
+Command 1 can be used to ensure that everything is running correctly.
+
+Command 4 creates and provisions a broadcaster Ethereum account with a
+small amount of test Eth. To replenish this deposit, re-run command 4.
+Note that this is not Rinkeby Eth; it is devenv Eth that is only valid
+within this VM. From here, broadcasters can stream into the node using
+RTMP port 1935 on the host machine.
+
+Command 5 creates, stakes and configures a transcoder node and its
+corresponding Ethereum account. Re-running command 5 multiple times will
+acquire more test LPT and stake it to the same account. Note this is not
+Rinkeby LPT; it is devenv LPT that is only valid within this VM.
+
+Command 9 can be run to force-rebuild FFmpeg if a (re-)install via
+command 8 is insufficient. Since FFMpeg is built in the shared directory,
+a full FFmpeg rebuild is not necessary is the VM is recreated. Rebuilds
+can take a long time; for fresh VMs, a reinstall via Command 8 should
+suffice to save time.
+
+### Alternate Usage
+
+Sometimes actually doing development in a VM may be inconvenient. For
+example, you might be testing [go-livepeer](github.com/livepeer/go-livepeer)
+locally on OSX, rather than Linux. Devenv can be used to jump-start a
+test Livepeer environment by automating many of the required steps.
+Local nodes can then connect to this VM "remotely".
+
+The idea is to get the blockchain parts running in the devenv VM, and
+use the devenv to prepare parameters that can be used by a local build
+of go-livepeer. Here is an example workflow:
+
+* Run `lpdev` steps 2 and 3 (Start Geth, deploy protocol contracts)
+* Run `lpdev`step 4: start broadcast node. Ensure that it succeeds with
+a deposit, eg this message should have been printed: `Depositing 500 Wei`.
+Take note of the `datadir` address. For example:
+```
+      livepeer -controllerAddr 0x7023155754d3c4b7c9ce73778e5c83261ff78f37 \
+              -datadir /home/vagrant/.lpdata/broadcaster-ce684ee753 \
+              -ethAcctAddr ce684ee753ceff32c69828f8513a55bd16653ade \
+              -ethIpcPath /home/vagrant/.ethereum/geth.ipc \
+              -ethPassword "pass" \
+              -monitor=false \
+              -rtmpAddr 0.0.0.0:1935 \
+              -httpAddr 0.0.0.0:8935 \
+              -cliAddr 0.0.0.0:7935 
+```
+
+This creates a broadcaster with an Ethereum account that has been
+provisioned with a small Eth deposit. Take the private key from the
+`broadcaster-XXX/keystore` datadir, and copy it to the VM's shared
+folder (`~/src` within the VM) to make it accessible to the host. Then
+a local script can be created to use this key and point to Geth on the
+VM. For example:
+```
+      $HOME/go/src/github.com/livepeer/go-livepeer/livepeer \
+              -controllerAddr 0x7023155754d3c4b7c9ce73778e5c83261ff78f37 \
+              -datadir $HOME/.lpData/broadcaster \
+              -ethUrl "ws://<devenv-host>:8546" \
+              -ethPassword "pass" \
+              -monitor=false \
+              -currentManifest=true\
+              -v 99 \
+              -devenv
+```
+Two things to note here: put the key file into `$HOME/.lpData/broadcaster/keystore/keyfile`,
+and point `ethUrl` to the devenv host VM, which passes through geth's
+port 8546.
+* Run `lpdev` step 5: Run through the same steps for the transcoder:
+export the keys, copy over and modify any relevant startup parameters,
+etc. Note that you might want to shut down the transcoder or any other
+Livepeer nodes running in the devenv VM before starting up a local
+transcoder, eg run `kill ``pgrep livepeer`` in a VM terminal.
+Here is an example of a local configuration:
+```
+      $HOME/go/src/github.com/livepeer/go-livepeer/livepeer \
+              -controllerAddr 0x7023155754d3c4b7c9ce73778e5c83261ff78f37 \
+              -datadir $HOME/.lpData/transcoder \
+              -ethUrl "ws://<devenv-host>:8546" \
+              -cliAddr ":7936" \
+              -serviceAddr "127.0.0.1:8936" \
+              -ethPassword "pass" \
+              -monitor=false \
+              -ipfsPath $HOME/.lpData/transcoder/ipfs \
+              -v 99 \
+              -devenv \
+              -initializeRound=true \
+              -transcoder
+```
+
 ## Additional Details
 
 The following software is included in this virtual machine:
