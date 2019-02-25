@@ -184,6 +184,8 @@ Here is an example of a local configuration:
               -initializeRound=true \
               -transcoder
 ```
+There is python script to automate this procedure - `get_eth_accounts_from_devenv.py`. Run it on host machine (after configuring broadcaster and transcoder inside VM) - it will copy keys and create shell scripts to run broadcaster and transcoder.
+
 
 ## Additional Details
 
