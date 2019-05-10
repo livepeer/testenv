@@ -532,23 +532,20 @@ function __lpdev_node_reset {
 }
 
 function __lpdev_node_update {
-
-  wget_args=$1
-
-  URL=$(curl -s https://api.github.com/repos/livepeer/go-livepeer/releases |jq -r ".[0].assets[].browser_download_url" | grep linux)
-
-  if [ -z $URL ]
+  if [ -d $GOPATH/src/github.com/livepeer/go-livepeer ]
   then
-    echo "Couldn't find the latest Linux release ($URL return instead)"
-    return 1
+    echo "go-livepeer src directory exists. Installing using local version"
+    OPWD=$PWD
+    cd $GOPATH/src/github.com/livepeer/go-livepeer
+    go install ./cmd/...
+    cd $OPWD
+  else
+    goGetCmd="go get github.com/livepeer/go-livepeer/cmd/..."
+    echo "$goGetCmd: Downloading and installing go-livepeer packages"
+    eval $goGetCmd
   fi
 
-  cd $HOME
-  wget $wget_args $URL
-  tar -xzf livepeer_linux.tar.gz
-  rm livepeer_linux.tar.gz
   echo "Don't forget to restart any running nodes to use the latest release"
-
 }
 
 function __lpdev_node_broadcaster {
